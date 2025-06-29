@@ -1,19 +1,93 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Bell, MessageCircle, Sun, Moon } from "lucide-react"
+import { Search, Bell, MessageCircle, Sun, Moon, User, Settings, LogOut, UserCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 import { GuitarIcon } from "@/components/icons/guitar-icon"
 import { SearchDropdown } from "@/components/search-dropdown"
 import { AuthModal } from "@/components/auth-modal"
 import { useTheme } from "next-themes"
+import { useEffect } from "react"
+import { useSearchParams } from "next/navigation"
+import { logout } from "@/lib/api/auth"
+import { User as UserType } from "@/interfaces/user"
 
 export function Navbar() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
+  const [user, setUser] = useState<UserType | undefined>(undefined)
   const { theme, setTheme } = useTheme()
+
+  const handleLogout = async () => {
+
+    try {
+      await logout()
+
+      localStorage.removeItem("user")
+      window.location.reload()
+    }
+    catch (error) {
+      console.error("Logout failed:", error)
+      alert("Failed to logout. Please try again.")
+    }
+  }
+
+  const handleProfile = () => {
+    // Handle profile navigation
+    console.log("Navigate to profile")
+  }
+
+  const handleSettings = () => {
+    // Handle settings navigation
+    console.log("Navigate to settings")
+  }
+
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const token = localStorage.getItem("resetToken")
+    if (token) {
+      localStorage.removeItem("resetToken")
+      setIsAuthModalOpen(true)
+
+      setTimeout(() => {
+        const event = new CustomEvent("reset-password", { detail: { token } })
+        window.dispatchEvent(event)
+      }, 100)
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    const userJson = localStorage.getItem("user")
+    if (userJson) {
+      const parsed: UserType = JSON.parse(userJson)
+      setUser(parsed)
+    }
+  }, [])
+
+  useEffect(() => {
+    const verifyEmail = localStorage.getItem("emailVerified")
+
+    if (verifyEmail) {
+      localStorage.removeItem("emailVerified")
+
+      setIsAuthModalOpen(true)
+
+      setTimeout(() => {
+        const event = new CustomEvent("verify-success", { detail: { email: verifyEmail } })
+        window.dispatchEvent(event)
+      }, 100)
+    }
+  }, [])
 
   return (
     <>
@@ -80,13 +154,63 @@ export function Navbar() {
                 <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all duration-500 ease-in-out dark:rotate-0 dark:scale-100" />
               </Button>
 
-              {/* Login Button */}
-              <Button
-                className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2"
-                onClick={() => setIsAuthModalOpen(true)}
-              >
-                Login
-              </Button>
+              {/* User Profile or Login Button */}
+              {user?.isLoggedIn ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="flex items-center space-x-2 px-3 py-2 h-auto">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.profilePictureUrl || "/placeholder.svg"} alt={user.userName} />
+                        <AvatarFallback>
+                          {user.userName}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm font-medium hidden sm:block">{user.userName}</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <div className="flex items-center space-x-2 p-2 w-full max-w-[220px]">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={user.profilePictureUrl || "/placeholder.svg"} alt={user.userName} />
+                        <AvatarFallback>{user.userName}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col space-y-1 overflow-hidden">
+                        <p className="text-sm font-medium truncate">{user.userName}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleProfile} className="cursor-pointer">
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleSettings} className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Account</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer">
+                      <Bell className="mr-2 h-4 w-4" />
+                      <span>Notifications</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button
+                  className="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2"
+                  onClick={() => setIsAuthModalOpen(true)}
+                >
+                  Login
+                </Button>
+              )}
             </div>
           </div>
         </div>
