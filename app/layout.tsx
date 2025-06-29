@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Minimal UI Layout",
+  title: "Band Community",
   description: "A clean and minimal UI layout with floating navbar and sidebar",
 }
 
