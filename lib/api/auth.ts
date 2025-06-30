@@ -1,3 +1,4 @@
+import { error } from "console";
 import { toast } from "sonner";
 
 export async function login(email: string, password: string) {
@@ -28,7 +29,8 @@ export async function signup(data: any) {
 
     const result = await res.json()
     if (!res.ok || !result.success) {
-        throw new Error(result.message || "Signup failed")
+        const message = result.message || "Signup failed"
+        throw new Error(message)
     }
 
     return result
@@ -47,7 +49,6 @@ export async function logout() {
         if (!res.ok) {
             throw new Error("Logout failed")
         }
-        toast.success("Logged out successfully")
     })
 }
 
@@ -75,8 +76,11 @@ export async function resendEmail(email: string) {
 
     if (!res.ok) {
         const error = await res.json()
-        if (error.message.includes("confirmed") || error.message.includes("not confirmed") || error.message.includes("verify")) {
+        if (error.message.includes("not confirmed") || error.message.includes("verify")) {
             toast.error("Email is not confirmed. Please check your email for the confirmation link.")
+        }
+        else if (error.message.includes("confirmed")) {
+            toast.success("Email is already confirmed. You can login now.")
         }
         throw new Error(error.message || "Login failed")
     }
