@@ -2,7 +2,7 @@ import { error } from "console";
 import { toast } from "sonner";
 
 export async function login(email: string, password: string) {
-    const res = await fetch("https://localhost:7160/api/Account/login", {
+    const res = await fetch("https://localhost:7160/api/Authorize/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -21,7 +21,7 @@ export async function login(email: string, password: string) {
 }
 
 export async function signup(data: any) {
-    const res = await fetch("https://localhost:7160/api/Account/create-account", {
+    const res = await fetch("https://localhost:7160/api/Authorize/create-account", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -37,12 +37,12 @@ export async function signup(data: any) {
 }
 
 export function loginWithGoogle() {
-    const googleAuthUrl = `https://localhost:7160/api/account/login/google?returnUrl=http://localhost:3000`
+    const googleAuthUrl = `https://localhost:7160/api/Authorize/login/google?returnUrl=http://localhost:3000`
     window.location.href = googleAuthUrl
 }
 
 export async function logout() {
-    return await fetch("https://localhost:7160/api/Account/logout", {
+    return await fetch("https://localhost:7160/api/Authorize/logout", {
         method: "POST",
         credentials: "include"
     }).then(res => {
@@ -53,7 +53,7 @@ export async function logout() {
 }
 
 export async function forgotPassword(email: string) {
-    const res = await fetch("https://localhost:7160/api/Account/forgot-password", {
+    const res = await fetch("https://localhost:7160/api/Authorize/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -68,7 +68,7 @@ export async function forgotPassword(email: string) {
 }
 
 export async function resendEmail(email: string) {
-    const res = await fetch("https://localhost:7160/api/Account/resend-email-confirmation", {
+    const res = await fetch("https://localhost:7160/api/Authorize/resend-email-confirmation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -89,7 +89,7 @@ export async function resendEmail(email: string) {
 }
 
 export async function resetPassword(token: string, newPassword: string, confirmPassword: string) {
-    const res = await fetch("https://localhost:7160/api/Account/reset-password", {
+    const res = await fetch("https://localhost:7160/api/Authorize/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
