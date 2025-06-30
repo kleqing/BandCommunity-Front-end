@@ -22,7 +22,7 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [currentView, setCurrentView] = useState<
-    "login" | "signup" | "forgot" | "verify" | "verify-success" | "reset-password"
+    "login" | "signup" | "forgot" | "verify" | "verify-success" | "reset-password" | "forgot-success"
   >("login")
   const [userEmail, setUserEmail] = useState("")
   const [isEmailVerified, setIsEmailVerified] = useState(false)
@@ -54,7 +54,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       // Handle forgot password
       try {
         await forgotPassword(formData.resetEmail)
+        setUserEmail(formData.resetEmail)
         toast.success("Reset link sent! Please check your email.")
+        setCurrentView("forgot-success")
       } catch (error: any) {
         if (error.message.toLowerCase().includes("not confirmed") || error.message.toLowerCase().includes("verify")) {
           setUserEmail(formData.resetEmail)
@@ -98,15 +100,34 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast.error("Passwords do not match")
         return
       }
-      await signup(formData)
-      setUserEmail(formData.email)
-      setCurrentView("verify")
+      try {
+        await signup(formData)
+        setUserEmail(formData.email)
+        setCurrentView("verify")
+      }
+      catch (error: any) {
+        const msg = error.message?.toLowerCase() || ""
+        if (msg.includes("email already exist") && msg.includes("not confirmed")) {
+          setUserEmail(formData.email)
+          setCurrentView("verify")
+          toast.info("This email is already registered but not verified. Please check your email.")
+        }
+        else if (msg.includes("email already exist")) {
+          toast.error("Email already exists. Please use a different email.")
+        }
+        else if (msg.includes("username already exist")) {
+          toast.error("Username already exists. Please choose a different username.")
+        }
+        else {
+          toast.error(error.message || "Signup failed")
+        }
+      }
+
     }
     else if (currentView === "login") {
       try {
         const res = await login(formData.email, formData.password)
         const user = res.data
-        toast.success("Login successful")
 
         const userData: User = {
           userName: user.userName,
@@ -119,11 +140,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         window.location.reload()
         onClose()
       } catch (error: any) {
-        toast.error(error.message || "Login failed")
-        if (error.message.toLowerCase().includes("not confirmed") || error.message.toLowerCase().includes("verify")) {
-
+        const msg = error.message?.toLowerCase() || ""
+        if (msg.toLowerCase().includes("not confirmed") || msg.toLowerCase().includes("verify")) {
           setUserEmail(formData.email)
           setCurrentView("verify")
+        }
+        else if (msg.toLowerCase().includes("not found")) {
+          toast.error("Account not found. Please sign up first.")
+        }
+        else if (msg.toLowerCase().includes("invalid")) {
+          toast.error("Incorrect password or account does not exist.")
+        }
+        else {
+          toast.error(error.message || "Login failed")
         }
       }
     }
@@ -166,25 +195,21 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleResendVerification = async () => {
     if (resendCooldown > 0 || !userEmail) return
 
-    try {
-      await resendEmail(userEmail)
-      toast.success("Verification email resent successfully")
+    await resendEmail(userEmail)
+    toast.success("Verification email resent successfully")
 
-      // Start cooldown
-      setResendCooldown(60)
-      const interval = setInterval(() => {
-        setResendCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    }
-    catch (error: any) {
-      toast.error(error.message || "Failed to resend verification email")
-    }
+    // Start cooldown
+    setResendCooldown(60)
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
   }
 
   const resetForm = () => {
@@ -219,13 +244,6 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const backToLogin = () => {
     setCurrentView("login")
     setFormData((prev) => ({ ...prev, resetEmail: "", newPassword: "", confirmNewPassword: "" }))
-  }
-
-  const goToVerifyWithEmail = () => {
-    if (formData.resetEmail.trim()) {
-      setUserEmail(formData.resetEmail)
-    }
-    setCurrentView("verify")
   }
 
   const getTitle = () => {
@@ -362,6 +380,42 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 </button>
               </div>
             </form>
+          ) : currentView === "forgot-success" ? (
+            // Forgot Password Success View
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <div className="w-16 h-16 bg-sky-100 dark:bg-sky-900 rounded-full flex items-center justify-center">
+                  <Mail className="w-8 h-8 text-sky-600" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Check your email</h3>
+                <p className="text-sm text-muted-foreground">We've sent a password reset link to</p>
+                <p className="text-sm font-medium">{userEmail}</p>
+                <p className="text-sm text-muted-foreground">Click the button in the email to reset your password.</p>
+              </div>
+
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full bg-transparent"
+                  onClick={() => setCurrentView("forgot")}
+                >
+                  Didn't receive the email?
+                </Button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={backToLogin}
+                    className="text-sm text-sky-600 hover:text-sky-700 hover:underline"
+                  >
+                    Back to Login
+                  </button>
+                </div>
+              </div>
+            </div>
           ) : currentView === "verify" ? (
             // Email Verification View
             <div className="text-center space-y-4">
