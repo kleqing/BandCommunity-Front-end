@@ -49,37 +49,38 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    /* iOS Dark Mode inspired colors - softer and more comfortable */
+    --background: 0 0% 11%; /* #1c1c1e - iOS dark background */
+    --foreground: 0 0% 98%; /* Almost white text */
+    --card: 0 0% 14%; /* #242426 - iOS card background */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 14%; /* Same as card for consistency */
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary-foreground: 0 0% 11%;
+    --secondary: 0 0% 18%; /* #2e2e30 - iOS secondary background */
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 0 0% 18%; /* Softer muted background */
+    --muted-foreground: 0 0% 65%; /* #a6a6a6 - iOS secondary text */
+    --accent: 0 0% 18%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --border: 0 0% 22%; /* #383838 - iOS border color */
+    --input: 0 0% 18%; /* Input background matches secondary */
     --ring: 0 0% 83.1%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-background: 0 0% 14%; /* Match card background */
+    --sidebar-foreground: 0 0% 98%;
     --sidebar-primary: 224.3 76.3% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-accent: 0 0% 18%; /* Match secondary */
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 22%; /* Match border */
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
@@ -90,6 +91,7 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 }
 
@@ -106,6 +108,7 @@ body {
 /* Ensure scrolling still works */
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.3s ease;
 }
 
 /* Hide scrollbar for specific elements while maintaining scroll */
@@ -116,4 +119,56 @@ html {
 
 .hide-scrollbar::-webkit-scrollbar {
   display: none; /* Safari and Chrome */
+}
+
+/* Smooth theme transitions */
+* {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Specific transitions for theme-sensitive elements */
+.bg-background,
+.bg-card,
+.bg-popover,
+.bg-muted,
+.border-border,
+.text-foreground,
+.text-muted-foreground {
+  transition: all 0.3s ease;
+}
+
+/* iOS Dark Mode specific enhancements */
+.dark {
+  /* Enhanced backdrop blur for iOS feel */
+  .bg-background\/80 {
+    background-color: hsl(0 0% 11% / 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* Softer shadows for iOS aesthetic */
+  .shadow-lg {
+    box-shadow: 0 10px 25px -3px rgb(0 0 0 / 0.3), 0 4px 6px -2px rgb(0 0 0 / 0.15);
+  }
+
+  .shadow-sm {
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.15);
+  }
+
+  /* iOS-style borders */
+  .border {
+    border-color: hsl(0 0% 22%);
+  }
+
+  /* Enhanced glass effect for modals */
+  .backdrop-blur-md {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+}
+
+/* Light mode backdrop enhancements for consistency */
+.bg-background\/80 {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
