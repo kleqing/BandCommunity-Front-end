@@ -191,7 +191,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     toast.success("Verification email resent successfully")
 
     // Start cooldown
-    setResendCooldown(60)
+    setResendCooldown(30)
     const interval = setInterval(() => {
       setResendCooldown((prev) => {
         if (prev <= 1) {
