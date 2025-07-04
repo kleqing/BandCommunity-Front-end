@@ -43,7 +43,7 @@ export function Navbar() {
 
   const handleProfile = () => {
     // Handle profile navigation
-    console.log("Navigate to profile")
+    window.location.href = "/profile"
   }
 
   const handleSettings = () => {
