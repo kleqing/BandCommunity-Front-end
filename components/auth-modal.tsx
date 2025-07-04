@@ -2,18 +2,20 @@
 
 import type React from "react"
 
-import { use, useState } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { ArrowLeft, Mail, CheckCircle } from "lucide-react"
 import { login, signup, forgotPassword, resendEmail, resetPassword } from "@/lib/api/auth"
 import { toast } from "sonner"
-import { useEffect } from "react"
 import { isPasswordValid, isDateOfBirthValid } from "@/lib/utils"
 import { User } from "@/interfaces/user"
+import countriesRaw from "@/data/countries.json"
+import statesRaw from "@/data/states.json"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Country, State } from "@/interfaces/location"
 
 interface AuthModalProps {
   isOpen: boolean
@@ -40,7 +42,19 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
     resetEmail: "",
     newPassword: "",
     confirmNewPassword: "",
+    address: "",
+    country: "",
+    state: ""
   })
+
+  const countries = countriesRaw as Country[]
+  const states = statesRaw as State[]
+
+  const availableStates = useMemo(() => {
+    return states
+      .filter((s) => s.country_code === formData.country && s.state_code && s.name)
+      .sort((a, b) => a.name.localeCompare(b.name))
+  }, [formData.country])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -98,6 +112,11 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast.error("Passwords do not match")
         return
       }
+
+      const selectedCountry = countries.find(c => c.iso2 === formData.country)?.name || ""
+      const selectedState = states.find(s => s.state_code === formData.state && s.country_code === formData.country)?.name || ""
+      const fullAddress = `${selectedState}, ${selectedCountry}`
+      formData.address = fullAddress;
       try {
         await signup(formData)
         setUserEmail(formData.email)
@@ -217,6 +236,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       resetEmail: "",
       newPassword: "",
       confirmNewPassword: "",
+      address: "",
+      country: "",
+      state: "",
     })
   }
 
@@ -259,7 +281,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md scale-95 origin-center">
         <DialogHeader>
           <div className="flex items-center justify-center relative">
             {(currentView === "forgot" || currentView === "verify" || currentView === "reset-password") && (
@@ -604,6 +626,49 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         onChange={(e) => handleInputChange("phoneNumber", e.target.value)}
                         required
                       />
+                    </div>
+
+                    {/* Location Fields */}
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="country">Country</Label>
+                        <Select value={formData.country} onValueChange={(value) => handleInputChange("country", value)}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose country" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {countries
+                              .filter((c) => c.iso2)
+                              .map((country) => (
+                                <SelectItem key={country.iso2} value={country.iso2}>
+                                  {country.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="state">City</Label>
+                        <Select
+                          value={formData.state}
+                          onValueChange={(value) => handleInputChange("state", value)}
+                          disabled={!formData.country}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder={formData.country ? "Choose city" : "Select country first"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableStates
+                              .filter((state) => state.state_code)
+                              .map((state) => (
+                                <SelectItem key={state.state_code} value={state.state_code}>
+                                  {state.name}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
 
                     <div className="space-y-2">
